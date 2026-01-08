@@ -6,6 +6,30 @@
     <title>Unity Web Player | word-chef</title>
   </head>
   <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: black;
+    }
+
+    #unity-container {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    #unity-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: black;
+        image-rendering: auto; /* optional, prevents pixelation scaling */
+    }
+
     /* Rotate warning overlay */
     #rotate-warning {
         position: fixed;
@@ -29,6 +53,12 @@
           <small>Landscape mode required</small>
       </div>
     </div>
+
+    <script>
+        function isMobile() {
+            return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+        }
+    </script>
 
     <script>
       function checkOrientation() {
@@ -67,6 +97,8 @@
         }
 
         function enterImmersiveMode() {
+            if (!isMobile()) return; // only on mobile
+
             requestFullscreen();
             tryLockLandscape();
         }
@@ -117,8 +149,51 @@
             });
         }
 
-        document.addEventListener("click", startUnity, { once: true });
-        document.addEventListener("touchstart", startUnity, { once: true });
+        // --- Wait for the loader to finish loading ---
+        function onLoaderReady() {
+            if (isMobile()) {
+                // Mobile: wait for user gesture
+                document.addEventListener("click", startUnity, { once: true });
+                document.addEventListener("touchstart", startUnity, { once: true });
+            } else {
+                // Desktop: start immediately, but after loader is loaded
+                startUnity();
+            }
+        }
+
+        // Call after window load
+        if (document.readyState === "complete") {
+            onLoaderReady();
+        } else {
+            window.addEventListener("load", onLoaderReady);
+        }
+
+        function resizeUnityCanvasAspect() {
+            const canvas = document.querySelector("#unity-canvas");
+            const aspectTarget = 960 / 600; // your Unity design aspect ratio
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            let newWidth, newHeight;
+
+            if (w / h > aspectTarget) {
+                // screen wider than Unity
+                newHeight = h;
+                newWidth = h * aspectTarget;
+            } else {
+                // screen taller than Unity
+                newWidth = w;
+                newHeight = w / aspectTarget;
+            }
+
+            canvas.style.width = newWidth + "px";
+            canvas.style.height = newHeight + "px";
+            canvas.style.marginLeft = ((w - newWidth)/2) + "px";
+            canvas.style.marginTop = ((h - newHeight)/2) + "px";
+        }
+        window.addEventListener("resize", resizeUnityCanvasAspect);
+        window.addEventListener("orientationchange", resizeUnityCanvasAspect);
+        resizeUnityCanvasAspect();
     </script>
   </body>
 </html>
