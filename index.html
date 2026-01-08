@@ -144,6 +144,7 @@
                 productVersion: "1.0",
             }).then(instance => {
                 unityInstance = instance;
+                resizeUnityCanvas(); // scale internal buffer after load
             }).catch(err => {
                 console.error("Unity failed to start:", err);
             });
@@ -168,32 +169,46 @@
             window.addEventListener("load", onLoaderReady);
         }
 
-        function resizeUnityCanvasAspect() {
-            const canvas = document.querySelector("#unity-canvas");
-            const aspectTarget = 960 / 600; // your Unity design aspect ratio
+        // --- Canvas scaling ---
+        function resizeUnityCanvas() {
+            const canvas = document.getElementById("unity-canvas");
+            const targetAspect = 960 / 600; // Unity design aspect ratio
+
             const w = window.innerWidth;
             const h = window.innerHeight;
 
             let newWidth, newHeight;
 
-            if (w / h > aspectTarget) {
-                // screen wider than Unity
+            if (w / h > targetAspect) {
                 newHeight = h;
-                newWidth = h * aspectTarget;
+                newWidth = h * targetAspect;
             } else {
-                // screen taller than Unity
                 newWidth = w;
-                newHeight = w / aspectTarget;
+                newHeight = w / targetAspect;
             }
 
+            // Update CSS size
             canvas.style.width = newWidth + "px";
             canvas.style.height = newHeight + "px";
-            canvas.style.marginLeft = ((w - newWidth)/2) + "px";
-            canvas.style.marginTop = ((h - newHeight)/2) + "px";
+            canvas.style.marginLeft = ((w - newWidth) / 2) + "px";
+            canvas.style.marginTop = ((h - newHeight) / 2) + "px";
+
+            // Update Unity internal buffer only if instance exists
+            if (unityInstance && unityInstance.Module && unityInstance.Module.canvas) {
+                const dpi = window.devicePixelRatio || 1;
+                const ctx = unityInstance.Module.canvas.getContext('webgl2') || unityInstance.Module.canvas.getContext('webgl');
+                if (ctx) {
+                    unityInstance.Module.canvas.width = newWidth * dpi;
+                    unityInstance.Module.canvas.height = newHeight * dpi;
+                    ctx.viewport(0, 0, newWidth * dpi, newHeight * dpi);
+                }
+            }
         }
-        window.addEventListener("resize", resizeUnityCanvasAspect);
-        window.addEventListener("orientationchange", resizeUnityCanvasAspect);
-        resizeUnityCanvasAspect();
+
+        // Always call to set initial canvas size (CSS)
+        window.addEventListener("resize", resizeUnityCanvas);
+        window.addEventListener("orientationchange", resizeUnityCanvas);
+        resizeUnityCanvas();
     </script>
   </body>
 </html>
