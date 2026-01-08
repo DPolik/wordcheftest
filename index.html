@@ -5,8 +5,92 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | word-chef</title>
   </head>
+  <style>
+    /* Rotate warning overlay */
+    #rotate-warning {
+        position: fixed;
+        inset: 0;
+        background: black;
+        color: white;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        font-size: 24px;
+        z-index: 9999;
+    }
+  </style>
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
+    
+    <div id="rotate-warning">
+      <div>
+          🔄 Please rotate your device<br/>
+          <small>Landscape mode required</small>
+      </div>
+    </div>
+
+    <script>
+      function checkOrientation() {
+          const isPortrait = window.matchMedia("(orientation: portrait)").matches;
+          const warning = document.getElementById("rotate-warning");
+
+          if (isPortrait) {
+              warning.style.display = "flex";
+          } else {
+              warning.style.display = "none";
+          }
+      }
+
+      checkOrientation();
+
+      window.addEventListener("resize", checkOrientation);
+      window.addEventListener("orientationchange", checkOrientation);
+
+      async function lockLandscape() {
+          if (screen.orientation && screen.orientation.lock) {
+              try {
+                  await screen.orientation.lock("landscape");
+              } catch (e) {}
+          }
+      }
+
+      document.addEventListener("click", lockLandscape, { once: true });
+      document.addEventListener("touchstart", lockLandscape, { once: true });
+    </script>
+
+    <script>
+        function requestFullscreen() {
+            const el = document.documentElement;
+
+            if (el.requestFullscreen) el.requestFullscreen();
+            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+        }
+
+        function isFullscreen() {
+            return document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.msFullscreenElement;
+        }
+    </script>
+
+    <script>
+        function enterImmersiveMode() {
+            requestFullscreen();
+            lockLandscape();
+        }
+
+        document.addEventListener("click", enterImmersiveMode, { once: true });
+        document.addEventListener("touchstart", enterImmersiveMode, { once: true });
+    </script>
+
+    <script>
+        window.SetFullscreenFromUnity = function () {
+            requestFullscreen();
+        }
+    </script>
+    
     <script src="Build/wordcheftest.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -43,3 +127,4 @@
     </script>
   </body>
 </html>
+
