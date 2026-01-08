@@ -46,43 +46,30 @@
 
       window.addEventListener("resize", checkOrientation);
       window.addEventListener("orientationchange", checkOrientation);
-
-      async function lockLandscape() {
-          if (screen.orientation && screen.orientation.lock) {
-              try {
-                  await screen.orientation.lock("landscape");
-              } catch (e) {}
-          }
-      }
-
-      document.addEventListener("click", lockLandscape, { once: true });
-      document.addEventListener("touchstart", lockLandscape, { once: true });
     </script>
 
     <script>
+        function tryLockLandscape() {
+            try {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock("landscape").catch(() => {});
+                }
+            } catch {}
+        }
+
         function requestFullscreen() {
-            const el = document.documentElement;
-
-            if (el.requestFullscreen) el.requestFullscreen();
-            else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-            else if (el.msRequestFullscreen) el.msRequestFullscreen();
+            try {
+                const el = document.documentElement;
+                if (el.requestFullscreen) el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                else if (el.msRequestFullscreen) el.msRequestFullscreen();
+            } catch {}
         }
 
-        function isFullscreen() {
-            return document.fullscreenElement ||
-                document.webkitFullscreenElement ||
-                document.msFullscreenElement;
-        }
-    </script>
-
-    <script>
         function enterImmersiveMode() {
             requestFullscreen();
-            lockLandscape();
+            tryLockLandscape();
         }
-
-        document.addEventListener("click", enterImmersiveMode, { once: true });
-        document.addEventListener("touchstart", enterImmersiveMode, { once: true });
     </script>
 
     <script>
@@ -92,38 +79,46 @@
     </script>
     
     <script src="Build/wordcheftest.loader.js"></script>
+
     <script>
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
+        let unityInstance = null;
+        let unityReady = false;
 
-        var canvas = document.querySelector("#unity-canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.style.position = "fixed";
+        // Wait for the loader to exist
+        function onUnityLoaderReady() {
+            unityReady = true;
+        }
 
-        document.body.style.textAlign = "left";
+        if (document.readyState === "complete") {
+            onUnityLoaderReady();
+        } else {
+            window.addEventListener("load", onUnityLoaderReady);
+        }
 
-      }
+        function startUnity() {
+            if (!unityReady || unityInstance) return;
 
-      createUnityInstance(document.querySelector("#unity-canvas"), {
-        arguments: [],
-        dataUrl: "Build/wordcheftest.data",
-        frameworkUrl: "Build/wordcheftest.framework.js",
-        codeUrl: "Build/wordcheftest.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DPoli",
-        productName: "word-chef",
-        productVersion: "1.0",
-        // matchWebGLToCanvasSize: false, // Uncomment this to separately control WebGL canvas render size and DOM element size.
-        // devicePixelRatio: 1, // Uncomment this to override low DPI rendering on high DPI displays.
-      }).then((unityInstance) => {
-      }).catch((message) => {
-        alert(message);
-      });
+            enterImmersiveMode();
+
+            const canvas = document.querySelector("#unity-canvas");
+
+            createUnityInstance(canvas, {
+                dataUrl: "Build/wordcheftest.data",
+                frameworkUrl: "Build/wordcheftest.framework.js",
+                codeUrl: "Build/wordcheftest.wasm",
+                streamingAssetsUrl: "StreamingAssets",
+                companyName: "DPoli",
+                productName: "word-chef",
+                productVersion: "1.0",
+            }).then(instance => {
+                unityInstance = instance;
+            }).catch(err => {
+                console.error("Unity failed to start:", err);
+            });
+        }
+
+        document.addEventListener("click", startUnity, { once: true });
+        document.addEventListener("touchstart", startUnity, { once: true });
     </script>
   </body>
 </html>
