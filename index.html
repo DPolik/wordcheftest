@@ -5,61 +5,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | word-chef</title>
   </head>
-  <style>
-    /* Rotate warning overlay */
-    #rotate-warning {
-        position: fixed;
-        inset: 0;
-        background: black;
-        color: white;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        font-size: 24px;
-        z-index: 9999;
-    }
-  </style>
   <body style="text-align: center; padding: 0; border: 0; margin: 0;">
     <canvas id="unity-canvas" width=960 height=600 tabindex="-1" style="width: 960px; height: 600px; background: #231F20"></canvas>
-    
-    <div id="rotate-warning">
-      <div>
-          🔄 Please rotate your device<br/>
-          <small>Landscape mode required</small>
-      </div>
-    </div>
-
-    <script>
-      function checkOrientation() {
-          const isPortrait = window.matchMedia("(orientation: portrait)").matches;
-          const warning = document.getElementById("rotate-warning");
-
-          if (isPortrait) {
-              warning.style.display = "flex";
-          } else {
-              warning.style.display = "none";
-          }
-      }
-
-      checkOrientation();
-
-      window.addEventListener("resize", checkOrientation);
-      window.addEventListener("orientationchange", checkOrientation);
-
-      async function lockLandscape() {
-          if (screen.orientation && screen.orientation.lock) {
-              try {
-                  await screen.orientation.lock("landscape");
-              } catch (e) {}
-          }
-      }
-
-      document.addEventListener("click", lockLandscape, { once: true });
-      document.addEventListener("touchstart", lockLandscape, { once: true });
-    </script>
-    
-    <script src="Build/test2.loader.js"></script>
+    <script src="Build/wordcheftest.loader.js"></script>
     <script>
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         // Mobile device style: fill the whole browser client area with the game canvas:
@@ -79,9 +27,9 @@
 
       createUnityInstance(document.querySelector("#unity-canvas"), {
         arguments: [],
-        dataUrl: "Build/test2.data",
-        frameworkUrl: "Build/test2.framework.js",
-        codeUrl: "Build/test2.wasm",
+        dataUrl: "Build/wordcheftest.data",
+        frameworkUrl: "Build/wordcheftest.framework.js",
+        codeUrl: "Build/wordcheftest.wasm",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DPoli",
         productName: "word-chef",
@@ -95,4 +43,3 @@
     </script>
   </body>
 </html>
-
